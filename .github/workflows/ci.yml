@@ -1,0 +1,27 @@
+name: Template validation
+on:
+  pull_request: { branches: [main] }
+  push: { branches: [main] }
+jobs:
+  fresh-app:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: maxim-lobanov/setup-xcode@v1
+        with: { xcode-version: latest-stable }
+      - run: brew install xcodegen swiftlint jq
+      - name: Verify the app or a fresh template copy
+        run: scripts/ci.sh
+      - name: Keep verification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: template-verification
+          path: |
+            .scratch/logs/
+            .scratch/ui-audit/
+            .scratch/*.xcresult/
+            .scratch/template-validation/**/app/.scratch/logs/
+            .scratch/template-validation/**/app/.scratch/ui-audit/
+            .scratch/template-validation/**/app/.scratch/*.xcresult/
+          if-no-files-found: warn

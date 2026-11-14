@@ -1,0 +1,129 @@
+# __APP_NAME__ — SwiftLint. Sizes are enforced from day one. Do NOT add files to
+# `excluded` to silence size rules — split the file (see LESSONS.md § 1).
+
+included:
+  - App
+  - Packages/AppKit/Sources
+  - Packages/AppKit/Tests
+  - AppTests
+
+excluded:
+  - .build
+  - .scratch
+  - DerivedData
+  - "*.xcodeproj"
+  - Packages/*/.build
+
+# ---- anti-god-file budget ----------------------------------------------
+file_length:
+  warning: 400
+  error: 600
+  ignore_comment_only_lines: true
+type_body_length:
+  warning: 250
+  error: 350
+function_body_length:
+  warning: 40
+  error: 80
+closure_body_length:
+  warning: 30
+  error: 60
+cyclomatic_complexity:
+  warning: 10
+  error: 15
+  ignores_case_statements: true
+function_parameter_count:
+  warning: 6
+  error: 8
+line_length:
+  warning: 130
+  error: 160
+  ignores_urls: true
+  ignores_comments: true
+large_tuple:
+  warning: 3
+nesting:
+  type_level: 2
+  function_level: 3
+
+identifier_name:
+  min_length: 2
+  excluded: [id, x, y, z, i, j, dx, dy, to, at]
+
+opt_in_rules:
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - closure_body_length
+  - explicit_init
+  - sorted_imports
+  - empty_count
+  - first_where
+  - contains_over_filter_count
+  - contains_over_first_not_nil
+  - redundant_type_annotation
+  - prefer_self_in_static_references
+  - unhandled_throwing_task
+  - discouraged_optional_boolean
+  - fatal_error_message
+  - toggle_bool
+  - multiline_arguments
+  - multiline_parameters
+  - vertical_parameter_alignment_on_call
+  - unneeded_parentheses_in_closure_argument
+  - private_action
+  - private_outlet
+  - lower_acl_than_parent
+  - overridden_super_call
+  - prohibited_super_call
+  - unowned_variable_capture
+  - yoda_condition
+  - accessibility_label_for_image
+  - accessibility_trait_for_button
+
+analyzer_rules:            # run with: swiftlint analyze --compiler-log-path .scratch/xcodebuild.log
+  - unused_declaration
+  - unused_import
+
+disabled_rules:
+  - todo                   # TODOs are tracked in docs/BACKLOG.md; lint noise doesn't help
+  - trailing_comma
+
+# ---- architecture and native style -------------------------------------
+custom_rules:
+  no_observable_object:
+    regex: '(@Published\b|:\s*ObservableObject\b|,\s*ObservableObject\b)'
+    message: "Use @Observable stores."
+    severity: error
+  no_swiftui_in_core_domain:
+    regex: '^import\s+(SwiftUI|UIKit)\b'
+    message: "Core/Domain/Persistence have no UI imports."
+    severity: error
+    included: ".*Packages/AppKit/Sources/(Core|Domain|Persistence)/.*\\.swift"
+  no_domain_in_designsystem:
+    regex: '^import\s+(Core|Domain|Persistence)\b'
+    message: "DesignSystem has no product or persistence dependencies."
+    severity: error
+    included: ".*Packages/AppKit/Sources/DesignSystem/.*\\.swift"
+  no_raw_color_literal:
+    regex: 'Color\(\s*(red:|hex:|\.sRGB)|#colorLiteral'
+    message: "Use semantic system colors; custom branding needs a scoped policy change."
+    severity: error
+  no_hardcoded_font_size:
+    regex: '\.font\(\s*\.system\(\s*size:|UIFont\(name:|Font\.custom\('
+    message: "Use system text styles and Dynamic Type."
+    severity: error
+  no_print:
+    regex: '^\s*print\('
+    message: "Use Logger with controlled diagnostics."
+    severity: warning
+    excluded: ".*Tests/.*"
+  no_in_memory_swiftdata_in_app_tests:
+    regex: 'isStoredInMemoryOnly:\s*true'
+    message: "Use FileBackedContainer and retain the container."
+    severity: error
+    included: ".*AppTests/.*\\.swift"
+  no_xctest:
+    regex: '^import XCTest'
+    message: "Use Swift Testing; XCTest is reserved for XCUITest targets."
+    severity: error
+    excluded: ".*UITests/.*"

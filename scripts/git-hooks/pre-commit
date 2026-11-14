@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Check generated-file changes even when the commit contains no Swift.
+set -euo pipefail
+cd "$(git rev-parse --show-toplevel)"
+python3 - <<'PY'
+import subprocess
+import sys
+paths = subprocess.check_output(
+    ["git", "diff", "--cached", "--name-only", "--diff-filter=ACMR", "-z"]
+).decode().split("\0")
+generated = [p for p in paths if p.endswith(("project.pbxproj", "Info.plist", ".entitlements"))]
+if generated and "project.yml" not in paths:
+    sys.exit("Generated project/plist/entitlement changes need project.yml; regenerate instead.")
+PY
+if git diff --cached --name-only --diff-filter=ACMR | grep -q '\.swift$'; then
+  command -v swiftlint >/dev/null || { echo "Install swiftlint before committing Swift."; exit 1; }
+  swiftlint lint --strict --no-cache
+  scripts/audit/file-size.sh
+fi
